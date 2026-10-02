@@ -4,7 +4,7 @@ Make your job hunt easier. Waymark tracks your target roles, maps their hiring c
 
 **Self-hosted · Accounts · Python + React · MIT**
 
-This is an early release. Historical coverage varies by employer, and missing dates stay unknown. Automatic monitoring supports Greenhouse, Lever, Ashby, and pages with `JobPosting` structured data; other sites need manual research or a new connector.
+Historical coverage varies by employer, and missing dates stay unknown. Automatic monitoring supports Greenhouse, Lever, Ashby, and pages with `JobPosting` structured data; other sites need manual research or a new connector.
 
 ## What it does
 
