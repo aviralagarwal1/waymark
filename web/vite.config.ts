@@ -6,10 +6,27 @@ import brand from '../waymark/brand.json'
 const escape = (text: string) => text.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;')
 
 // index.html is static, so its title and description are filled from the
-// shared brand file here rather than repeated as literals.
+// shared brand file here rather than repeated as literals. __APP_BASE_URL__ is
+// left for the server, which knows each install's public origin; the dev
+// server has none, so its preview URLs stay relative.
 const brandHead: Plugin = {
   name: 'brand-head',
-  transformIndexHtml: html => html.replaceAll('__BRAND_NAME__', escape(brand.name)).replaceAll('__BRAND_DESCRIPTION__', escape(brand.description)),
+  transformIndexHtml: (html, context) => {
+    const filled = html.replaceAll('__BRAND_NAME__', escape(brand.name)).replaceAll('__BRAND_TAGLINE__', escape(brand.tagline))
+      .replaceAll('__BRAND_DESCRIPTION__', escape(brand.description))
+    return context.server ? filled.replaceAll('__APP_BASE_URL__', '') : filled
+  },
+  // The manifest names the app for "Add to Home Screen", from the same file.
+  // No standalone display: an iOS home-screen app keeps cookies apart from
+  // Safari, where confirmation and reset links open, so it would sign people
+  // in twice.
+  generateBundle() {
+    this.emitFile({type: 'asset', fileName: 'site.webmanifest', source: JSON.stringify({
+      name: brand.name, short_name: brand.name, description: brand.description,
+      start_url: '/app', background_color: '#0b1016', theme_color: '#0b1016',
+      icons: [192, 512].map(size => ({src: `/icon-${size}.png`, sizes: `${size}x${size}`, type: 'image/png', purpose: 'any maskable'})),
+    }, null, 2)})
+  },
 }
 
 export default defineConfig({

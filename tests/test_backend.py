@@ -244,6 +244,18 @@ def test_api_optimistic_edit_origin_validation_and_reset(tmp_path):
         assert len(client.get("/api/targets").json()) == 3
 
 
+def test_link_previews_name_the_install_own_origin(tmp_path):
+    static = tmp_path / "dist"
+    static.mkdir()
+    (static / "index.html").write_text('<meta property="og:image" content="__APP_BASE_URL__/og.png">', encoding="utf-8")
+    (static / "og.png").write_bytes(b"png")
+    app = create_app(Settings(data_dir=str(tmp_path), static_dir=str(static), base_url="https://waymark.example/"))
+    with TestClient(app, base_url="https://waymark.example") as client:
+        for path in ["/", "/signin", "/index.html"]:
+            assert client.get(path).text == '<meta property="og:image" content="https://waymark.example/og.png">'
+        assert client.get("/og.png").content == b"png"
+
+
 def test_live_mode_requires_separate_data_and_prevents_demo_reset(tmp_path):
     settings = Settings(mode="live", data_dir=str(tmp_path))
     app = create_app(settings)

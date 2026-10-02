@@ -1,11 +1,12 @@
 """Same-origin API with accounts, and the production static frontend."""
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
+from html import escape
 import json
 from pathlib import Path
 from urllib.parse import urlsplit
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, Response, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from pydantic import ValidationError
 from sqlalchemy import func, select
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -436,11 +437,14 @@ def create_app(settings=None):
         if path.startswith("api/"):
             raise HTTPException(404, "API route not found")
         static_root = Path(settings.static_dir).resolve()
-        requested = (static_root / path).resolve()
-        if requested.is_relative_to(static_root) and requested.is_file():
+        requested, index = (static_root / path).resolve(), static_root / "index.html"
+        if requested.is_relative_to(static_root) and requested.is_file() and requested != index:
             return FileResponse(requested)
-        if (static_root / "index.html").is_file():
-            return FileResponse(static_root / "index.html")
+        if index.is_file():
+            # Link previews need absolute URLs, and only the server knows
+            # this install's public origin.
+            page = index.read_text(encoding="utf-8").replace("__APP_BASE_URL__", escape(settings.base_url.rstrip("/")))
+            return HTMLResponse(page)
         return JSONResponse({"detail": "Frontend not built. Run the documented web build, then reload.", "api": "/docs"})
 
     return app

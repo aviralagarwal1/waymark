@@ -118,6 +118,8 @@ python -m evaluations.run_discovery
 
 `.github/workflows/deploy.yml` deploys the maintainer's hosted instance after CI passes on `master`. Its Google Cloud identity trusts only this repository, so in a fork it does nothing; delete it or point it at your own project.
 
+The link-preview image and the app icons are rendered from `waymark/brand.json` and the mark by `npm --prefix web run identity`, which needs Chrome (set `CHROME` if it is not found). Rerun it after changing the name, tagline, description, or mark, and commit the images.
+
 To run the tests against Postgres instead of SQLite, set `TEST_DATABASE_URL` to an empty database you can discard; the tests empty its tables.
 
 The discovery evaluation runs 40 synthetic cases through source validation and matching, with no network or paid calls. It does not measure how well research finds real employers, and its pass rate is not a coverage claim.
