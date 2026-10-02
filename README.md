@@ -135,6 +135,6 @@ New source connectors live in `waymark/discovery/connectors.py`. A connector nee
 
 ## Scope
 
-No hosted service, billing, automatic applications, resume generation, universal scraping, or guaranteed historical recovery.
+No billing, automatic applications, resume generation, universal scraping, or guaranteed historical recovery.
 
 Licensed under [MIT](LICENSE). Employer content and trademarks belong to their owners.
