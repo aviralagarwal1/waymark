@@ -4,7 +4,7 @@ import { emptyTarget, messageOf, nextCohortYear } from './api'
 import { Button, CheckBox, Field, Input, Modal, Select } from './components'
 
 export const employmentOptions = <><option value="FullTime">Full-time</option><option value="Intern">Internship</option><option value="PartTime">Part-time</option><option value="Contract">Contract</option><option value="Temporary">Temporary</option></>
-export const connectorOptions = <><option value="auto">Detect automatically</option><option value="greenhouse">Greenhouse</option><option value="lever">Lever</option><option value="ashby">Ashby</option><option value="jsonld">JobPosting page</option></>
+const connectorOptions = <><option value="auto">Detect automatically</option><option value="greenhouse">Greenhouse</option><option value="lever">Lever</option><option value="ashby">Ashby</option><option value="jsonld">JobPosting page</option></>
 
 export function TargetFields({draft, change, advanced = false}: {draft: TargetInput; change: (patch: Partial<TargetInput>) => void; advanced?: boolean}) {
   return <>

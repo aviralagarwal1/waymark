@@ -47,8 +47,8 @@ export function Field({label, hint, children, className = ''}: {label: string; h
 }
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {return <input className="input" {...props} />}
 export function Select({children, ...props}: SelectHTMLAttributes<HTMLSelectElement>) {return <span className="select-wrap"><select className="input" {...props}>{children}</select><ChevronDown size={14} /></span>}
-export function Empty({icon, title, description, action}: {icon?: ReactNode; title: string; description: string; action?: ReactNode}) {
-  return <div className="empty">{icon && <div className="empty-icon">{icon}</div>}<h3>{title}</h3><p>{description}</p>{action}</div>
+export function Empty({title, description, action}: {title: string; description: string; action?: ReactNode}) {
+  return <div className="empty"><h3>{title}</h3><p>{description}</p>{action}</div>
 }
 export function SearchBox({value, onChange, placeholder = 'Search companies, roles, locations…'}: {value: string; onChange: (s: string) => void; placeholder?: string}) {
   return <div className="search-box"><Search size={17} /><input aria-label={placeholder} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} />{value && <button aria-label="Clear search" onClick={() => onChange('')}><X size={14} /></button>}</div>
