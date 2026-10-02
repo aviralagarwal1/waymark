@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Python dependencies
+        run: python -m pip install -e ".[dev]"
+      - name: Install and build frontend
+        run: |
+          npm --prefix web ci
+          npm --prefix web run build
+      - name: Ruff
+        run: python -m ruff check waymark tests evaluations
+      - name: Pytest
+        run: python -m pytest
+      - name: Discovery evaluation harness
+        run: python -m evaluations.run_discovery
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t waymark:ci .
