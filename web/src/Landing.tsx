@@ -191,7 +191,6 @@ function Trail() {
         <span><strong>{p.name}</strong><span>{p.role}</span><span className={`waypoint-status${p.open ? ' now' : ''}`}>{p.status}</span></span>
       </li>)}
     </ol>
-    <figcaption className="trail-caption">Job applications are illustrative.</figcaption>
   </figure>
 }
 
