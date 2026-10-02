@@ -9,6 +9,7 @@ description = "Waymark tracks your target roles, maps their hiring cycles, and n
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
+authors = [{ name = "Aviral Agarwal" }]
 dependencies = [
   "fastapi>=0.115,<1",
   "uvicorn>=0.34,<1",
@@ -19,11 +20,17 @@ dependencies = [
   "anthropic>=0.84,<1",
   "beautifulsoup4>=4.13,<5",
   "openpyxl>=3.1.5,<4",
+  # Not imported directly: openpyxl uses it, when installed, to parse uploaded
+  # workbooks without expanding hostile XML.
   "defusedxml>=0.7.1,<1",
   "tzdata>=2025.1",
   "argon2-cffi>=23.1,<26",
   "psycopg[binary]>=3.2,<4",
 ]
+
+[project.urls]
+Homepage = "https://waymark.aviralagarwal.com"
+Source = "https://github.com/aviralagarwal1/waymark"
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3,<10", "ruff>=0.11,<1"]
