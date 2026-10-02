@@ -1,0 +1,45 @@
+# Local configuration and credentials (commit placeholders only)
+.env*
+!.env.example
+*.pem
+*.key
+credentials*.json
+service-account*.json
+service_account*.json
+gha-creds-*.json
+secrets/
+
+# Python and local runtime state
+__pycache__/
+*.pyc
+*.db
+*.db-shm
+*.db-wal
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+data/
+data-*/
+*.tsbuildinfo
+backups/
+exports/
+logs/
+*.log
+node_modules/
+web/dist/
+.coverage
+htmlcov/
+.env.local
+.DS_Store
+
+# Private working docs and agent instructions (see AGENTS.md)
+AGENTS.md
+CLAUDE.md
+docs/
+
+# Local tool settings and generated project state
+.claude/
+.codex/
+.agents/
