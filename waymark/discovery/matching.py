@@ -12,6 +12,13 @@ def normalize(value) -> str:
     return " ".join(re.findall(r"[^\W_]+", value, flags=re.UNICODE))
 
 
+# Words that give a title's rank but not its field. Sharing only these does not
+# make two titles related: "Product Manager" and "Customer Success Manager"
+# share "manager" alone. "Engineer" is left out on purpose, so a "Software
+# Engineer" target still sees "Full Stack Engineer" for review.
+GENERIC_TITLE_WORDS = {"manager", "senior", "sr", "staff", "lead", "principal", "associate", "junior", "intern", "director", "head", "ii", "iii", "iv"}
+
+
 def _role(value) -> set[str]:
     value = normalize(value)
     aliases = {"apm": "associate product manager", "pm": "product manager", "swe": "software engineer", "sde": "software engineer", "developer": "engineer", "internship": "intern", "internships": "intern", "engineering": "engineer"}
@@ -65,7 +72,7 @@ def match_posting(target: dict, posting: dict) -> dict:
         unknown.append("Desired role is missing")
     elif not desired_role.issubset(posted_role):
         overlap = desired_role & posted_role
-        if overlap and len(overlap) >= len(desired_role) / 2:
+        if overlap - GENERIC_TITLE_WORDS and len(overlap) >= len(desired_role) / 2:
             unknown.append("Related title; exact role or program needs review")
         else:
             reasons.append("Title does not match the requested role")
@@ -73,17 +80,27 @@ def match_posting(target: dict, posting: dict) -> dict:
     posted_type = _employment(posting.get("employment_type"))
     if re.search(r"\bintern(?:ship)?\b", title):
         posted_type.add("intern")
-    if not posted_type:
-        posted_type = _employment(" ".join(re.findall(r"\b(?:full time|part time|internship|temporary|contract)\b", description)))
     if wanted_type:
         if posted_type and not wanted_type.intersection(posted_type):
             reasons.append("Employment type differs from the requested type")
         elif "intern" in posted_type and "intern" not in wanted_type:
             reasons.append("Internship does not satisfy a non-internship target")
         elif not posted_type:
-            unknown.append("Employment type is not stated")
+            # Greenhouse sends no employment type, so read the description,
+            # but only for "full time" and "part time": "internship",
+            # "contract", and "temporary" turn up in passing on roles of every
+            # type ("prior internship experience" on a new-grad role,
+            # "government contracts" on a full-time one).
+            described = _employment(" ".join(re.findall(r"\b(?:full time|part time)\b", description)))
+            if described and not wanted_type.intersection(described):
+                reasons.append("Employment type differs from the requested type")
+            elif not described:
+                unknown.append("Employment type is not stated")
     level = normalize(target.get("level"))
-    if level in {"entry", "entry level", "new grad", "graduate", "junior"}:
+    if wanted_type == {"intern"} and re.search(r"\b(senior|sr|staff|principal|director|head|lead|manager)\b", title):
+        # An internship target is entry level even without a level set.
+        reasons.append("Title indicates a more senior role")
+    elif level in {"entry", "entry level", "new grad", "graduate", "junior"}:
         if re.search(r"\b(senior|sr|staff|principal|director|head|lead)\b", title):
             reasons.append("Title indicates a more senior role")
         elif re.search(r"\b(?:minimum|at least|requires?) (?:[3-9]|[1-9][0-9]) (?:plus )?years", description) or re.search(r"\b(?:[3-9]|[1-9][0-9]) years of (?:professional|relevant|industry) experience", description):
@@ -110,9 +127,13 @@ def match_posting(target: dict, posting: dict) -> dict:
             unknown.append("Work geography needs confirmation (remote does not establish country eligibility)")
     wanted_years = set(re.findall(r"\b20\d{2}\b", str(target.get("start_period") or "")))
     if wanted_years:
+        # A cohort the title states is the posting's own. A description can
+        # name others in passing ("do not apply if you are looking for summer
+        # or fall" on a winter internship), so it is read only when the title
+        # is silent. Seasons below follow the same rule.
         stated_years = set(re.findall(r"\b20\d{2}\b", title))
         # A graduation requirement, footer year, or publication date is not a start date.
-        for clause in re.split(r"[.!?;\n]", str(posting.get("description") or "").lower()):
+        for clause in [] if stated_years else re.split(r"[.!?;\n]", str(posting.get("description") or "").lower()):
             if re.search(r"\b(start(?:ing|s)?|begin(?:ning|s)?|join|summer|winter|spring|fall|autumn|cohort)\b", clause) and not re.search(r"\b(copyright|posted|published|graduat(?:e|ion|ing))\b", clause):
                 stated_years.update(re.findall(r"\b20\d{2}\b", clause))
         if stated_years and not stated_years.intersection(wanted_years):
@@ -121,11 +142,12 @@ def match_posting(target: dict, posting: dict) -> dict:
             unknown.append("Start cohort is not stated")
         desired_seasons = set(re.findall(r"\b(summer|winter|spring|fall|autumn)\b", normalize(target.get("start_period"))))
         stated_seasons = set(re.findall(r"\b(summer|winter|spring|fall|autumn)\b", title))
-        description_text = str(posting.get("description") or "").lower()
-        for clause in re.split(r"[.!?;\n]", description_text):
-            if re.search(r"\b(start|starting|starts|begin|beginning|cohort|for)\b", clause):
-                stated_seasons.update(re.findall(r"\b(summer|winter|spring|fall|autumn)\b", clause))
-        stated_seasons.update(re.findall(r"\b(summer|winter|spring|fall|autumn)\s+20\d{2}\b", description_text))
+        if not stated_seasons:
+            description_text = str(posting.get("description") or "").lower()
+            for clause in re.split(r"[.!?;\n]", description_text):
+                if re.search(r"\b(start|starting|starts|begin|beginning|cohort|for)\b", clause):
+                    stated_seasons.update(re.findall(r"\b(summer|winter|spring|fall|autumn)\b", clause))
+            stated_seasons.update(re.findall(r"\b(summer|winter|spring|fall|autumn)\s+20\d{2}\b", description_text))
         desired_seasons = {"fall" if x == "autumn" else x for x in desired_seasons}
         stated_seasons = {"fall" if x == "autumn" else x for x in stated_seasons}
         if desired_seasons and stated_seasons and not desired_seasons.intersection(stated_seasons):

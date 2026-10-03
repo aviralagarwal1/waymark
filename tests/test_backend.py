@@ -391,3 +391,31 @@ def test_demo_targets_and_board_share_a_cohort_on_any_date(tmp_path, today):
     assert seeded["start_period"] == f"Summer {today.year + 1}"
     assert seeded["historical_date"] == f"{today.year - 1}-09"
     assert match_posting(seeded, posting)["status"] == "match"
+
+
+# Shapes seen on real boards on 2026-10-02 (Databricks, Stripe, Anthropic);
+# each once produced the wrong verdict.
+def test_title_cohort_outranks_a_season_named_in_passing():
+    target = {"company": "Acme", "role": "Software Engineer Intern", "employment_type": "Intern", "location": "United States", "start_period": "Summer 2027"}
+    posting = {"company": "Acme", "title": "Software Engineering Intern (2027 Start) - Winter", "location": "New York, United States",
+               "description": "Please do not apply if you are looking for summer or fall. Join us in January."}
+    assert match_posting(target, posting)["status"] == "reject"
+
+
+def test_employment_types_named_in_passing_do_not_reject():
+    target = {"company": "Acme", "role": "Software Engineer", "employment_type": "Full-time", "location": "United States"}
+    posting = {"company": "Acme", "title": "Software Engineer, New Grad", "location": "New York, United States",
+               "description": "Prior internship experience is a plus. You will support government contracts."}
+    assert match_posting(target, posting)["status"] == "review"
+    stated = {**posting, "description": posting["description"] + " This is a full-time role."}
+    assert match_posting(target, stated)["status"] == "match"
+    intern = {**target, "role": "Software Engineer Intern", "employment_type": "Intern"}
+    assert match_posting(intern, {**posting, "title": "Staff Software Engineer, Billing"})["status"] == "reject"
+
+
+def test_a_shared_rank_word_alone_does_not_make_titles_related():
+    pm = {"company": "Acme", "role": "Product Manager"}
+    assert match_posting(pm, {"company": "Acme", "title": "Customer Success Manager"})["status"] == "reject"
+    assert match_posting(pm, {"company": "Acme", "title": "Senior Product Manager, Payments"})["status"] == "match"
+    swe = {"company": "Acme", "role": "Software Engineer"}
+    assert match_posting(swe, {"company": "Acme", "title": "Full Stack Engineer"})["status"] == "review"
