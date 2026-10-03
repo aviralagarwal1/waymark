@@ -13,13 +13,17 @@ const beats = [
   ['Hear the moment one opens', 'One email when a match goes live, then reminders until you apply, snooze, or dismiss it.'],
 ]
 
+// Ordered by what someone deciding whether to sign up checks first, and each
+// answer opens with what Waymark does. The same build serves the hosted site
+// and self-hosted installs, so every answer must hold for both: research needs
+// an Anthropic key, which the hosted site does not have.
 const faq = [
-  ['Does it apply for me?', 'No. It tells you when a role opens and links to the posting. Applying is yours.'],
-  ['Which careers sites can it watch?', 'Job boards on Greenhouse, Lever, and Ashby, and any careers page that publishes JobPosting structured data. Other sites can be researched, but not watched automatically.'],
-  ['What does it cost?', 'The software is free and open source under the MIT license. Research uses your own Anthropic API key, billed by Anthropic, within a monthly budget you set. Watching and email work without a key.'],
-  ['What if it can’t find when a role opened?', 'The date stays unknown. You can still watch the careers page, and add the date yourself if you know it.'],
-  ['Where does my data go?', 'It stays in your own database. With research turned on, the company and role you enter and the pages it reads are sent to Anthropic. There is no telemetry.'],
-  ['How does it email me?', 'Through your own email account, as each match appears or as a daily or weekly digest, with quiet hours and a daily cap.'],
+  ['Which careers sites can it watch?', 'Job boards on Greenhouse, Lever, and Ashby, and any careers page that publishes JobPosting structured data. A role on any other site can still sit on your watchlist with its dates and notes; you check that page yourself.'],
+  ['How will I hear when a role opens?', 'By email: one alert as each match appears, or a digest after each check, daily, or weekly. Reminders follow until you mark it applied, snoozed, or dismissed, and quiet hours and a daily cap keep it from crowding your inbox.'],
+  ['What does it cost?', 'Nothing. Waymark is free and open source under the MIT license, and watching careers pages and email alerts need no API key. If you run it yourself, you can add your own Anthropic key for research, billed by Anthropic within a monthly budget you set.'],
+  ['Where does my data go?', 'Into the database of the Waymark you sign in to, where only your account can see it. You can export your watchlist at any time, and deleting your account in Preferences removes everything in it. If you run Waymark yourself, research sends the company and role you enter, and the pages it reads, to Anthropic. There is no telemetry.'],
+  ['How does it know when a role opened last year?', 'Research finds past postings and announcements and shows the sentence behind each date, with what the date means. Where nothing supports a date, it stays unknown, and you can add one you know. Research needs an Anthropic key, so it runs when you host Waymark yourself.'],
+  ['Does it apply for me?', 'It gets you to the posting the moment it opens, with the link in your inbox. The application itself stays with you.'],
 ]
 
 const shortDate = (d: Date) => d.toLocaleDateString('en-GB', {day: 'numeric', month: 'short'})
