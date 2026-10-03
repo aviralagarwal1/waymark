@@ -94,9 +94,20 @@ def _address(value) -> str:
     return ""
 
 
+def _fetch_board(ats, url, board):
+    # A 404 from an ATS API means no board has that name, almost always a typo
+    # in the careers page address, so say that rather than an HTTP status.
+    try:
+        return safe_fetch(url)
+    except DiscoveryError as exc:
+        if exc.code == "not_found":
+            raise DiscoveryError(f"{ats} has no board named {board}; check the careers page address.", code="not_found") from None
+        raise
+
+
 def _greenhouse(config):
     api = "boards-api.eu.greenhouse.io" if ".eu." in config["url"] else "boards-api.greenhouse.io"
-    payload = safe_fetch(f"https://{api}/v1/boards/{config['board']}/jobs?content=true").json()
+    payload = _fetch_board("Greenhouse", f"https://{api}/v1/boards/{config['board']}/jobs?content=true", config["board"]).json()
     if not isinstance(payload, dict) or not isinstance(payload.get("jobs"), list):
         raise DiscoveryError("Greenhouse returned an unexpected job-list format.")
     jobs = payload["jobs"]
@@ -115,7 +126,7 @@ def _lever(config):
     postings, seen = [], set()
     for page in range(MAX_PAGES):
         try:
-            jobs = safe_fetch(f"https://{api}/v0/postings/{config['board']}?mode=json&limit={LEVER_PAGE_SIZE}&skip={page * LEVER_PAGE_SIZE}").json()
+            jobs = _fetch_board("Lever", f"https://{api}/v0/postings/{config['board']}?mode=json&limit={LEVER_PAGE_SIZE}&skip={page * LEVER_PAGE_SIZE}", config["board"]).json()
             if not isinstance(jobs, list):
                 raise DiscoveryError("Lever returned an unexpected job-list format.")
             for item in jobs[:LEVER_PAGE_SIZE]:
@@ -133,12 +144,16 @@ def _lever(config):
         except (DiscoveryError, TypeError, AttributeError, KeyError) as exc:
             if postings:
                 return postings, False, str(exc) if isinstance(exc, DiscoveryError) else "A Lever posting had an invalid format."
+            # Keep the reason (no such board, timeout, too large) rather than
+            # one message for every first-page failure.
+            if isinstance(exc, DiscoveryError):
+                raise
             raise DiscoveryError("Lever could not return a complete first page.") from None
     return postings, False, "Lever pagination reached the local page cap."
 
 
 def _ashby(config):
-    payload = safe_fetch(f"https://api.ashbyhq.com/posting-api/job-board/{config['board']}").json()
+    payload = _fetch_board("Ashby", f"https://api.ashbyhq.com/posting-api/job-board/{config['board']}", config["board"]).json()
     if not isinstance(payload, dict) or not isinstance(payload.get("jobs"), list):
         raise DiscoveryError("Ashby returned an unexpected job-list format.")
     jobs = payload["jobs"]

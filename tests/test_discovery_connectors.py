@@ -161,6 +161,56 @@ def test_redirect_to_metadata_is_blocked_before_connection(monkeypatch):
         safe_fetch("https://careers.example.org")
 
 
+class BodyResponse:
+    def __init__(self, status, body=b"", location=None):
+        self.status, self.body, self.location = status, body, location
+    def getheader(self, key, default=None):
+        return {"Location": self.location, "Content-Type": "application/json"}.get(key) or default
+    def read1(self, size):
+        chunk, self.body = self.body[:size], self.body[size:]
+        return chunk
+
+
+def serve(monkeypatch, responses):
+    """Answer each request from responses[hostname], with no network."""
+    class Conn:
+        def __init__(self, host, *a, **kw):
+            self.host, self.sock = host, None
+        def request(self, *a, **kw):
+            pass
+        def getresponse(self):
+            return responses[self.host]()
+        def close(self):
+            pass
+    monkeypatch.setattr("waymark.discovery.safety._PinnedHTTP", Conn)
+
+
+def test_ats_apis_may_return_whole_boards_but_other_hosts_keep_the_general_cap(monkeypatch):
+    body = b'{"jobs":[],"pad":"' + b"x" * 5_000_000 + b'"}'
+    serve(monkeypatch, {
+        "api.ashbyhq.com": lambda: BodyResponse(200, body),
+        "careers.example.org": lambda: BodyResponse(200, body),
+        "api.lever.co": lambda: BodyResponse(302, location="https://careers.example.org/jobs"),
+    })
+    assert fetch_source("https://jobs.ashbyhq.com/acme")["status"] == "ok"
+    with pytest.raises(DiscoveryError, match="size limit"):
+        safe_fetch("https://careers.example.org/jobs")
+    with pytest.raises(DiscoveryError, match="size limit"):
+        safe_fetch("https://api.lever.co/v0/postings/acme")
+
+
+@pytest.mark.parametrize("url,ats,host", [
+    ("https://job-boards.greenhouse.io/acme", "Greenhouse", "boards-api.greenhouse.io"),
+    ("https://jobs.lever.co/acme", "Lever", "api.lever.co"),
+    ("https://jobs.ashbyhq.com/acme", "Ashby", "api.ashbyhq.com"),
+])
+def test_missing_board_is_named_rather_than_an_http_status(monkeypatch, url, ats, host):
+    serve(monkeypatch, {host: lambda: BodyResponse(404, b'{"ok":false}')})
+    result = fetch_source(url)
+    assert result["status"] == "failed"
+    assert result["error"] == f"{ats} has no board named acme; check the careers page address."
+
+
 def test_pinned_connection_uses_prevalidated_ip(monkeypatch):
     from waymark.discovery.safety import _PinnedHTTP
     with patch("socket.create_connection") as connect:

@@ -22,6 +22,15 @@ from ..brand import BRAND
 from .errors import DiscoveryError
 
 MAX_BYTES = 4_000_000
+# The ATS job-board APIs return every posting with its full description in one
+# response, and a large employer's board runs well past 4 MB: on 2026-10-02
+# OpenAI's Ashby board was 13.9 MB and Databricks' Greenhouse board 9.7 MB, so
+# the general cap made them fail every check. These hosts are fixed rather than
+# user-supplied, and parsing the 13.9 MB board peaked at 71 MB of memory, well
+# inside the 512 MiB the service and worker have. Any other host, including one
+# an ATS redirects to, keeps the general cap.
+ATS_API_HOSTS = frozenset({"boards-api.greenhouse.io", "boards-api.eu.greenhouse.io", "api.lever.co", "api.eu.lever.co", "api.ashbyhq.com"})
+ATS_MAX_BYTES = 32_000_000
 MAX_URL = 2048
 USER_AGENT = f"{BRAND['name']}/0.1 (+{BRAND['repoUrl']}; public job monitoring)"
 _limits = ContextVar("discovery_fetch_limits", default=None)
@@ -101,7 +110,7 @@ class Document:
             raise DiscoveryError("Source returned invalid JSON.", code="invalid_response") from None
 
 
-def safe_fetch(url: str, *, max_bytes: int = MAX_BYTES, timeout: float = 15) -> Document:
+def safe_fetch(url: str, *, max_bytes: int | None = None, timeout: float = 15) -> Document:
     deadline = time.monotonic() + timeout
     limits = _limits.get()
     if limits:
@@ -113,6 +122,7 @@ def safe_fetch(url: str, *, max_bytes: int = MAX_BYTES, timeout: float = 15) -> 
             limits["remaining"] -= 1
         url, ip = public_url(url)
         parsed = urlsplit(url)
+        limit = max_bytes or (ATS_MAX_BYTES if parsed.hostname in ATS_API_HOSTS else MAX_BYTES)
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise DiscoveryError("Source request timed out.", code="timeout")
@@ -127,21 +137,21 @@ def safe_fetch(url: str, *, max_bytes: int = MAX_BYTES, timeout: float = 15) -> 
                 url = urljoin(url, location)
                 continue
             if response.status != 200:
-                raise DiscoveryError(f"Source returned HTTP {response.status}.", code="http_error")
+                raise DiscoveryError(f"Source returned HTTP {response.status}.", code="not_found" if response.status == 404 else "http_error")
             if response.getheader("Content-Encoding", "identity").lower() not in {"", "identity"}:
                 raise DiscoveryError("Unexpected compressed response.", code="invalid_response")
             body = bytearray()
-            while len(body) <= max_bytes:
+            while len(body) <= limit:
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     raise DiscoveryError("Source request timed out.", code="timeout")
                 if conn.sock:
                     conn.sock.settimeout(remaining)
-                chunk = response.read1(min(65536, max_bytes + 1 - len(body)))
+                chunk = response.read1(min(65536, limit + 1 - len(body)))
                 if not chunk:
                     break
                 body.extend(chunk)
-            if len(body) > max_bytes:
+            if len(body) > limit:
                 raise DiscoveryError("Source exceeds the response size limit.", code="response_too_large")
             content_type = response.getheader("Content-Type", "").lower()
             if content_type and not any(kind in content_type for kind in ("json", "html", "text/plain")):
