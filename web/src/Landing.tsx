@@ -172,9 +172,9 @@ const beatPanels = [WatchlistPanel, ChecksPanel, EmailPanel]
 
 function Trail() {
   const {harvey, polymarket, sierra} = exampleDates()
-  // Real employers make the example recognizable, so its dates are labelled an
-  // illustration below: none of them is a claim about that company's hiring.
-  // The open role at the top is Waymark's own.
+  // Real employers make the example recognizable; the figure's label calls it
+  // an illustration, and none of its dates is a claim about that company's
+  // hiring. The open role at the top is Waymark's own.
   const points = [
     {x: 6, y: 88, nx: 3, ny: 90, open: false, name: 'Figma', role: 'Product Designer', status: 'No past opening found'},
     {x: 24, y: 68, nx: 15, ny: 70, open: false, name: 'Harvey', role: 'Legal Operations', status: `Opened ${shortDate(harvey)} last year`},
