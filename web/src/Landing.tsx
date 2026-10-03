@@ -111,9 +111,11 @@ function useWalkedSteps(list: RefObject<HTMLOListElement | null>, count: number)
 
 // Product panels, one per beat. They show fields the product really has
 // (targets, source checks, the alert email as the worker writes it) for the
-// four companies on the hero trail, so the page tells one story. Every
-// address uses the reserved .example domain, and the section is captioned as
-// illustrative, so nothing reads as a fact about a real company's hiring.
+// four companies on the hero trail, so the page tells one story. The careers
+// pages are each company's real Ashby board, the kind Waymark watches, and the
+// alert links Sierra's real Agent Strategist posting (all checked 2026-10-02;
+// swap the posting if it closes). The check results and dates stay
+// illustrative, and the section is captioned so.
 function Panel({title, meta, children}: {title: string; meta?: string; children: ReactNode}) {
   return <div className="panel"><div className="panel-head"><strong>{title}</strong>{meta && <span>{meta}</span>}</div>{children}</div>
 }
@@ -139,9 +141,9 @@ function WatchlistPanel() {
 
 function ChecksPanel() {
   const rows = [
-    {company: 'Sierra', source: 'careers.sierra.example', checked: '12 minutes ago', result: '1 new match', live: true},
-    {company: 'Polymarket', source: 'careers.polymarket.example', checked: '2 hours ago', result: '2 new postings, neither matches', live: false},
-    {company: 'Harvey', source: 'careers.harvey.example', checked: '2 hours ago', result: 'No new postings', live: false},
+    {company: 'Sierra', source: 'jobs.ashbyhq.com/sierra', checked: '12 minutes ago', result: '1 new match', live: true},
+    {company: 'Polymarket', source: 'jobs.ashbyhq.com/polymarket', checked: '2 hours ago', result: '2 new postings, neither matches', live: false},
+    {company: 'Harvey', source: 'jobs.ashbyhq.com/harvey', checked: '2 hours ago', result: 'No new postings', live: false},
     {company: 'Figma', source: 'No source approved', checked: 'Not watched', result: 'Add a careers page to watch it', live: false},
   ]
   return <Panel title="Sources" meta="Checked every 6 hours">
@@ -158,8 +160,8 @@ function EmailPanel() {
       <p>A role you're watching just opened.</p>
       <div className="email-match">
         <strong>Agent Strategist, Sierra</strong>
-        <span>United States</span>
-        <span className="source">careers.sierra.example/jobs/agent-strategist</span>
+        <span>South Korea</span>
+        <span className="source">jobs.ashbyhq.com/sierra/575cf637-3a7a-4d9c-883c-8b0265811984</span>
       </div>
       <p className="blank">Found on the careers page; it may have been posted a little earlier.</p>
     </div>
