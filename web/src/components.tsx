@@ -19,7 +19,20 @@ export function Mark({size = 34}: {size?: number}) {
   </svg>
 }
 export function Wordmark({name}: {name: string}) {
-  return <span className="wordmark"><Mark />{name}</span>
+  return <span className="wordmark"><Mark /><span className="wordmark-name">{name}</span></span>
+}
+// The public pages' header. The account pages keep only the wordmark, since
+// offering "Sign in" on the sign-in page leads nowhere. On narrow phones the
+// three links leave no room for the name, so the mark stands alone there.
+export function SiteHeader({page}: {page?: 'about'}) {
+  return <header className="landing-header">
+    <a href="/" className="landing-home site-home" aria-label={`${brand.name} home`}><Wordmark name={brand.name} /></a>
+    <nav aria-label="Main">
+      <a href="/about" className="landing-nav-link" aria-current={page === 'about' ? 'page' : undefined}>About</a>
+      <a href="/signin" className="landing-button compact">Sign in</a>
+      <a href="/signup" className="landing-button primary compact">Create account</a>
+    </nav>
+  </header>
 }
 // Matches the footer on Aviral's other products (Compline), so they read as a family.
 export function SiteFooter() {

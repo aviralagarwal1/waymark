@@ -785,9 +785,48 @@ ul.log, .log ul { list-style: none; margin: 0; padding: 0; }
 .auth-alt a { color: var(--text); text-underline-offset: 3px; }
 .auth-sent { margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; color: var(--secondary); line-height: 1.55; }
 .auth-note { color: var(--muted); font-size: 0.9375rem; }
+
+/* The header's About link is quiet text beside the two pills. */
+.landing-nav-link { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--secondary) !important; font-size: 0.9375rem; font-weight: 500; text-decoration: none; transition: color 0.18s; }
+.landing-nav-link:hover, .landing-nav-link[aria-current="page"] { color: var(--text) !important; }
+
+/* About: one centered column, as on Scaffold and Compline. Headshot, name,
+   a few paragraphs, then round links. */
+.landing > .about { max-width: 40rem; padding: 4rem 0 6rem; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.about-photo { display: block; width: 9rem; height: 9rem; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 1px var(--border-strong); }
+.about h1 { margin-top: 1.5rem; font-size: clamp(2rem, 5vw, 2.75rem); font-weight: 400; letter-spacing: -0.03em; line-height: 1.05; }
+.about-copy { margin-top: 1.75rem; text-align: left; }
+.about-copy p { color: var(--secondary); font-size: 1.0625rem; line-height: 1.75; }
+.about-copy p + p { margin-top: 1.25rem; }
+.about-copy a { color: var(--text); font-weight: 500; text-underline-offset: 3px; }
+.about-links { display: flex; gap: 0.6rem; margin-top: 2.25rem; }
+.about-link { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border: 1px solid var(--border-strong); border-radius: 50%; color: var(--muted) !important; transition: color 0.18s, border-color 0.18s; }
+.about-link:hover { color: var(--text) !important; border-color: var(--text); }
+/* The column is short, so the footer is pushed to the foot of a tall window
+   rather than floating under the links. */
+.about-page { display: flex; flex-direction: column; }
+.about-page > * { width: 100%; }
+.about-page > .about { flex: 1 0 auto; }
+/* The column rises in once on load, a beat apart, like the landing page's
+   reveals. Without a motion preference it simply appears. */
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: no-preference) {
+  .about > * { animation: rise 0.7s var(--ease-out) both; }
+  .about > :nth-child(2) { animation-delay: 90ms; }
+  .about > :nth-child(3) { animation-delay: 180ms; }
+  .about > :nth-child(4) { animation-delay: 300ms; }
+}
 @media (max-width: 600px) {
   .landing > .auth-main { padding-top: 2.5rem; }
-  .landing-header .landing-button.compact { padding: 0 0.85rem; font-size: 0.875rem; }
+  .landing > .about { padding: 2.5rem 0 4rem; }
+  .about-photo { width: 7.5rem; height: 7.5rem; }
+  .about-copy p { font-size: 1rem; }
+  .landing-header .landing-button.compact { padding: 0 0.85rem; font-size: 0.875rem; white-space: nowrap; }
+  .landing-header nav { gap: 0.75rem; }
+  .landing-nav-link { font-size: 0.875rem; }
+}
+@media (max-width: 480px) {
+  .site-home .wordmark-name { display: none; }
 }
 
 /* Phones: a slim night header, and the four pages as a bottom tab bar in

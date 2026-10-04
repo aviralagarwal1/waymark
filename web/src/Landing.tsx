@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode, RefObject } from 'react'
 import { brand } from './brand'
-import { Mark, SiteFooter, Wordmark } from './components'
+import { Mark, SiteFooter, SiteHeader } from './components'
 
 const DAY = 86_400_000
 
@@ -219,13 +219,7 @@ export default function Landing() {
     <svg className="terrain" viewBox="0 0 1280 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       {terrain.map((c, i) => <path key={i} d={c.d} className={c.major ? 'major' : ''} />)}
     </svg>
-    <header className="landing-header">
-      <a href="/" className="landing-home" aria-label={`${brand.name} home`}><Wordmark name={brand.name} /></a>
-      <nav aria-label="Main">
-        <a href="/signin" className="landing-button compact">Sign in</a>
-        <a href="/signup" className="landing-button primary compact">Create account</a>
-      </nav>
-    </header>
+    <SiteHeader />
 
     <main>
       <section className="landing-hero">
